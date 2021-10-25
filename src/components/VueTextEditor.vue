@@ -6,372 +6,25 @@
     <div
       class="v-text-editor__container"
       :class="className + ' ' + (outlined && 'v-text-editor__outlined')"
-      :style="{ ...style, minWidth: '280px', borderColor }"
+      :style="{ ...style, borderColor }"
     >
-      <div class="v-text-editor__header" :style="{ ...headerStyle }">
-        <v-btn-toggle
-          v-if="isGroupActive('format')"
-          v-model="formatOptions"
-          multiple
-          dense
-          borderless
-          :background-color="outlined ? 'transparent' : bgColor"
-          :color="accentColor"
-        >
-          <v-tooltip top v-if="isOptionActive('bold')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="bold"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('bold')"
-              >
-                <v-icon
-                  :color="isOptionSelected('bold') ? accentColor : iconColor"
-                  >mdi-format-bold</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Bold</span>
-          </v-tooltip>
-
-          <v-tooltip top v-if="isOptionActive('italic')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="italic"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('italic')"
-              >
-                <v-icon
-                  :color="isOptionSelected('italic') ? accentColor : iconColor"
-                  >mdi-format-italic</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Italic</span>
-          </v-tooltip>
-
-          <v-tooltip top v-if="isOptionActive('underline')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="underline"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('underline')"
-              >
-                <v-icon
-                  :color="
-                    isOptionSelected('underline') ? accentColor : iconColor
-                  "
-                  >mdi-format-underline</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Underline</span>
-          </v-tooltip>
-        </v-btn-toggle>
-
-        <v-menu
-          v-if="isGroupActive('format') && isOptionActive('textColor')"
-          v-model="colorMenu"
-          offset-y
-          :close-on-content-click="false"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-tooltip top>
-              <template
-                v-slot:activator="{ on: tooltipOn, attrs: tooltipAttrs }"
-              >
-                <v-btn
-                  text
-                  style="min-width: unset"
-                  class="px-2"
-                  :color="accentColor"
-                  v-on="{ ...on, ...tooltipOn }"
-                  v-bind="{ ...attrs, ...tooltipAttrs }"
-                  @click="saveSelection"
-                >
-                  <div>
-                    <v-icon :color="iconColor">mdi-format-color-text</v-icon>
-
-                    <v-sheet
-                      rounded
-                      style="margin-top: -4px"
-                      height="4"
-                      width="26"
-                      :color="color"
-                    ></v-sheet>
-                  </div>
-                </v-btn>
-              </template>
-              <span>Text Color</span>
-            </v-tooltip>
-          </template>
-
-          <v-color-picker
-            v-model="color"
-            dot-size="14"
-            hide-mode-switch
-          ></v-color-picker>
-
-          <v-row align="center" justify="center" class="mb-4 mt-2">
-            <v-btn
-              :color="accentColor"
-              :dark="calculateColorBrightness(accentColor) <= 170"
-              @click="
-                setColor(color)
-                colorMenu = false
-              "
-            >
-              SAVE
-            </v-btn>
-          </v-row>
-        </v-menu>
-
-        <v-divider
-          v-if="isDividerActive('format')"
-          vertical
-          style="min-height: 36px"
-        ></v-divider>
-
-        <v-btn-toggle
-          v-if="isGroupActive('align')"
-          v-model="alignOption"
-          mandatory
-          dense
-          borderless
-          :background-color="outlined ? 'transparent' : bgColor"
-          :color="accentColor"
-        >
-          <v-tooltip top v-if="isOptionActive('justifyLeft')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="justifyLeft"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('justifyLeft')"
-              >
-                <v-icon
-                  :color="
-                    isOptionSelected('justifyLeft') ? accentColor : iconColor
-                  "
-                  >mdi-format-align-left</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Align Left</span>
-          </v-tooltip>
-
-          <v-tooltip top v-if="isOptionActive('justifyCenter')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="justifyCenter"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('justifyCenter')"
-              >
-                <v-icon
-                  :color="
-                    isOptionSelected('justifyCenter') ? accentColor : iconColor
-                  "
-                  >mdi-format-align-center</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Align Center</span>
-          </v-tooltip>
-
-          <v-tooltip top v-if="isOptionActive('justifyRight')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="justifyRight"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('justifyRight')"
-              >
-                <v-icon
-                  :color="
-                    isOptionSelected('justifyRight') ? accentColor : iconColor
-                  "
-                  >mdi-format-align-right</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Align Right</span>
-          </v-tooltip>
-
-          <v-tooltip top v-if="isOptionActive('justifyFull')">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                value="justifyFull"
-                icon
-                v-on="on"
-                v-bind="attrs"
-                @click="onOptionClick('justifyFull')"
-              >
-                <v-icon
-                  :color="
-                    isOptionSelected('justifyFull') ? accentColor : iconColor
-                  "
-                  >mdi-format-align-justify</v-icon
-                >
-              </v-btn>
-            </template>
-            <span>Justify</span>
-          </v-tooltip>
-        </v-btn-toggle>
-
-        <v-divider
-          v-if="isDividerActive('align')"
-          vertical
-          style="min-height: 36px"
-        ></v-divider>
-
-        <v-tooltip
-          top
-          v-if="isGroupActive('list') && isOptionActive('numberedList')"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              text
-              style="min-width: unset"
-              class="px-2"
-              v-on="on"
-              v-bind="attrs"
-              :color="accentColor"
-              @click="onOptionClick('insertorderedlist')"
-            >
-              <v-icon :color="iconColor">mdi-format-list-numbered</v-icon>
-            </v-btn>
-          </template>
-          <span>Numbered List</span>
-        </v-tooltip>
-
-        <v-tooltip
-          top
-          v-if="isGroupActive('list') && isOptionActive('bulletedList')"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              text
-              style="min-width: unset"
-              class="px-2"
-              v-on="on"
-              v-bind="attrs"
-              :color="accentColor"
-              @click="onOptionClick('insertUnorderedList')"
-            >
-              <v-icon :color="iconColor">mdi-format-list-bulleted</v-icon>
-            </v-btn>
-          </template>
-          <span>Bulleted List</span>
-        </v-tooltip>
-
-        <v-divider
-          v-if="isDividerActive('list')"
-          vertical
-          style="min-height: 36px"
-        ></v-divider>
-
-        <v-tooltip top v-if="isGroupActive('embed') && isOptionActive('files')">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              text
-              style="min-width: unset"
-              class="px-2"
-              v-on="on"
-              v-bind="attrs"
-              :color="accentColor"
-              @click="uploadFile"
-            >
-              <v-icon :color="iconColor">mdi-paperclip</v-icon>
-            </v-btn>
-          </template>
-          <span>Upload File</span>
-        </v-tooltip>
-
-        <input
-          v-if="isGroupActive('embed') && isOptionActive('files')"
-          ref="uploader"
-          class="v-text-editor__input d-none"
-          type="file"
-          multiple
-          @change="(e) => onFileUpload(e.target.files)"
-        />
-
-        <v-menu
-          v-if="isGroupActive('embed') && isOptionActive('insertLink')"
-          v-model="linkMenu"
-          offset-y
-          :close-on-content-click="false"
-          min-width="40%"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-tooltip top>
-              <template
-                v-slot:activator="{ on: tooltipOn, attrs: tooltipAttrs }"
-              >
-                <v-btn
-                  text
-                  style="min-width: unset"
-                  class="px-2"
-                  v-on="{ ...on, ...tooltipOn }"
-                  v-bind="{ ...attrs, ...tooltipAttrs }"
-                  :color="accentColor"
-                  @click="saveSelection"
-                >
-                  <v-icon :color="iconColor">mdi-link-variant</v-icon>
-                </v-btn>
-              </template>
-              <span>Insert Link</span>
-            </v-tooltip>
-          </template>
-
-          <v-text-field
-            v-model="url"
-            class="v-text-editor__link ma-0 pa-0"
-            clearable
-            autofocus
-            solo
-            :color="accentColor"
-            @keydown="
-              (e) => {
-                if (e.code === 'Enter') {
-                  e.preventDefault()
-                  insertLink(url)
-                }
-              }
-            "
-          ></v-text-field>
-        </v-menu>
-
-        <v-tooltip
-          top
-          v-if="isGroupActive('embed') && isOptionActive('removeLink')"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              text
-              style="min-width: unset"
-              class="px-2"
-              v-on="on"
-              v-bind="attrs"
-              :color="accentColor"
-              @click="removeLink"
-            >
-              <v-icon :color="iconColor">mdi-link-variant-off</v-icon>
-            </v-btn>
-          </template>
-          <span>Remove Link</span>
-        </v-tooltip>
-      </div>
+      <Header
+        :accentColor="accentColor"
+        :bgColor="bgColor"
+        :groups="groups"
+        :headerMinHeight="headerMinHeight"
+        :headerStyle="headerStyle"
+        :iconColor="iconColor"
+        :options="options"
+        :outlined="outlined"
+        @fileUpload="onFileUpload($event)"
+        @insertLink="insertLink($event)"
+        @linkMenuChange="linkMenu = $event"
+        @optionClick="onOptionClick($event)"
+        @removeLink="removeLink()"
+        @saveSelection="saveSelection()"
+        @setColor="setColor($event)"
+      />
 
       <div
         v-if="files.length && isGroupActive('embed')"
@@ -384,13 +37,14 @@
           close
           :color="accentColor"
           :text-color="
-            calculateColorBrightness(accentColor) <= 170 ? 'white' : 'black'
+            _calculateColorBrightness(accentColor) <= 170 ? 'white' : 'black'
           "
           @click:close="removeFile(file, index)"
         >
-          {{ file.name }} ({{ calculateFileSize(file.size) }})
+          {{ file.name }} ({{ _calculateFileSize(file.size) }})
         </v-chip>
       </div>
+
       <div
         class="v-text-editor__textarea px-4"
         contenteditable="true"
@@ -400,10 +54,13 @@
           (e) => {
             if (
               maxLength &&
-              maxLength <= e.target.innerText.replace(/\r?\n|\r/g, '').length &&
+              +maxLength <=
+                e.target.innerText.replace(/\r?\n|\r/g, '').length &&
               !safeKeys.filter((key) => e.code.includes(key.replace('*', '')))
-                .length
+                .length &&
+              !(isControlPressed && e.code === 'KeyZ')
             ) {
+              console.log(e.code)
               e.preventDefault()
             }
           }
@@ -418,12 +75,12 @@
           class="v-text-editor__counter"
           :style="{
             color:
-              filledPercentage === 100
+              filledPercentage >= 100
                 ? totalFillCounterColor
                 : filledPercentage >= 70
                 ? partialFillCounterColor
                 : counterColor === '#1d1d1d' &&
-                  calculateColorBrightness(bgColor) <= 170
+                  _calculateColorBrightness(bgColor) <= 170
                 ? '#f5f5f5'
                 : counterColor,
           }"
@@ -440,15 +97,16 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import Header from './Header.vue'
 
-type JustifyType =
-  | 'justifyLeft'
-  | 'justifyRight'
-  | 'justifyCenter'
-  | 'justifyFull'
+import { calculateColorBrightness, rgba2hex } from '../utils/color'
+import { calculateFileSize } from '../utils/file'
 
 export default Vue.extend({
   name: 'VueTextEditor',
+  components: {
+    Header,
+  },
   props: {
     /**
      * Property that defines the classes to be applied to
@@ -475,7 +133,7 @@ export default Vue.extend({
     /**
      * Property that defines the editor width.
      *
-     * The min width is 280px.
+     * The min width is 260px.
      *
      * @default ```100%```
      */
@@ -746,36 +404,6 @@ export default Vue.extend({
       } as CSSStyleDeclaration,
 
       /**
-       * Property that represents the selected formatting options.
-       */
-      formatOptions: [] as string[],
-
-      /**
-       * Property that represents the selected align option.
-       */
-      alignOption: 'justifyLeft' as JustifyType,
-
-      /**
-       * Property that defines all possible formatting options.
-       */
-      possibleFormats: ['bold', 'italic', 'underline'],
-
-      /**
-       * Property that defines all possible align options.
-       */
-      possibleAligns: [
-        'justifyLeft',
-        'justifyCenter',
-        'justifyRight',
-        'justifyFull',
-      ] as JustifyType[],
-
-      /**
-       * Property that defines all the editor available groups.
-       */
-      availableGroups: ['format', 'align', 'list', 'embed'],
-
-      /**
        * Property that defines all the editor available options.
        */
       availableOptions: {
@@ -784,27 +412,6 @@ export default Vue.extend({
         list: ['numberedList', 'bulletedList'],
         embed: ['files', 'insertLink', 'removeLink'],
       },
-
-      /**
-       * Property that defines whether the color picker menu is open.
-       */
-      colorMenu: false,
-
-      /**
-       * Property that defines the color picker current HEX.
-       *
-       * Its default value is calculated based on the brightness
-       * level of the editor background color.
-       */
-      color: '',
-
-      /**
-       * Property that defines the text current color (HEX).
-       *
-       * Its default value is calculated based on the brightness
-       * level of the editor background color.
-       */
-      textColor: '',
 
       /**
        * Property that defines the text editor base color.
@@ -839,11 +446,6 @@ export default Vue.extend({
       rawText: '',
 
       /**
-       * Property that represents the URL present in the URL text field.
-       */
-      url: '',
-
-      /**
        * Property that defines whether the 'insert link' menu is open.
        */
       linkMenu: false,
@@ -873,7 +475,6 @@ export default Vue.extend({
        * is locked.
        */
       safeKeys: [
-        'Space',
         'ControlLeft',
         'ControlRight',
         'ShiftLeft',
@@ -881,7 +482,6 @@ export default Vue.extend({
         'AltLeft',
         'AltRight',
         'CapsLock',
-        'Tab',
         'Enter',
         'Escape',
         'Backspace',
@@ -889,6 +489,7 @@ export default Vue.extend({
         'Delete',
         'Pause',
         'Numpad*',
+        'Arrow',
       ],
 
       /**
@@ -897,6 +498,11 @@ export default Vue.extend({
        * It may be changed using the 'saveSelection' method.
        */
       currentSelection: [0, 0, null] as (Node | number | null | undefined)[],
+
+      /**
+       * Property that represents whether the CTRL key is pressed.
+       */
+      isControlPressed: false,
     }
   },
   computed: {
@@ -918,19 +524,6 @@ export default Vue.extend({
   },
   methods: {
     /**
-     * Returns whether the given property is selected.
-     *
-     * @param value The option value.
-     * @returns Whether the option is selected.
-     */
-    isOptionSelected(value: string): boolean {
-      return (
-        (this.formatOptions && this.formatOptions.includes(value)) ||
-        this.alignOption === value
-      )
-    },
-
-    /**
      * Returns whether the given group is active.
      *
      * @param group The group to be checked.
@@ -949,61 +542,13 @@ export default Vue.extend({
     },
 
     /**
-     * Returns whether the given option is active.
-     *
-     * @param option The option to be checked.
-     * @returns Whether the option is active.
-     */
-    isOptionActive(option: string): boolean {
-      const entry: [string, string[]] | undefined = Object.entries(
-        this.availableOptions,
-      ).find((avOp) => avOp[1].includes(option))
-
-      return (
-        !this.options ||
-        Object.values(this.options).join().split(',').includes(option) ||
-        (!!entry && this.groups && this.groups.includes(entry[0]))
-      )
-    },
-
-    /**
-     * Returns whether the divider from some group is active.
-     *
-     * @param group The group to be checked.
-     * @returns Whether the divider is active.
-     */
-    isDividerActive(group: string): boolean {
-      const index = this.availableGroups.indexOf(group)
-
-      if (index === -1) {
-        return false
-      }
-
-      return (
-        this.isGroupActive(group) &&
-        this.availableGroups
-          .slice(index + 1, this.availableGroups.length)
-          .map((gp) => this.isGroupActive(gp))
-          .reduce((previous, current) => current || previous, false)
-      )
-    },
-
-    /**
      * Calculates the file size and adds its unit (B, KB, MB, GB).
      *
      * @param size The file size.
      * @returns A string containing the rounded size with its unit (B, KB, MB, GB).
      */
-    calculateFileSize(size: number): string {
-      if (size < 1024) {
-        return size + ' B'
-      } else if (size < 1048576) {
-        return (size / 1024).toFixed(2) + ' KB'
-      } else if (size < 1073741824) {
-        return (size / 1048576).toFixed(2) + ' MB'
-      } else {
-        return (size / 1073741824).toFixed(2) + ' GB'
-      }
+    _calculateFileSize(size: number): string {
+      return calculateFileSize(size)
     },
 
     /**
@@ -1012,39 +557,8 @@ export default Vue.extend({
      * @param color The color in RGB or HEX format.
      * @returns A number that represents the color brightness (dark is <= 170 approximately)
      */
-    calculateColorBrightness(color: string): number {
-      let r: number | string
-      let g: number | string
-      let b: number | string
-
-      let colorAux: RegExpMatchArray | number | boolean | null = null
-
-      if (color.match(/^rgb/)) {
-        colorAux = color.match(
-          /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/,
-        )
-
-        r = color[1]
-        g = color[2]
-        b = color[3]
-      } else {
-        colorAux = +(
-          '0x' +
-          color.slice(1).replace((color.length < 5 && /./g) as RegExp, '$&$&')
-        )
-
-        r = colorAux >> 16
-        g = (colorAux >> 8) & 255
-        b = colorAux & 255
-      }
-
-      const hsp = Math.sqrt(
-        0.299 * ((r as number) * (r as number)) +
-          0.587 * ((g as number) * (g as number)) +
-          0.114 * ((b as number) * (b as number)),
-      )
-
-      return hsp
+    _calculateColorBrightness(color: string): number {
+      return calculateColorBrightness(color)
     },
 
     /**
@@ -1055,39 +569,11 @@ export default Vue.extend({
      *
      * @example
      * ```js
-     * rgba2hex('rgba(255, 0, 0, 1)') => '#FF0000FF'
+     * _rgba2hex('rgba(255, 0, 0, 1)') => '#FF0000FF'
      * ```
      */
-    rgba2hex(color: string): string {
-      let a: number | string
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rgb: any = color
-        .replace(/\s/g, '')
-        .match(/^rgba?\((\d+),(\d+),(\d+),?([^,\s)]+)?/i)
-      const alpha = ((rgb && rgb[4]) || '').trim()
-      let hex = rgb
-        ? (rgb[1] | (1 << 8)).toString(16).slice(1) +
-          (rgb[2] | (1 << 8)).toString(16).slice(1) +
-          (rgb[3] | (1 << 8)).toString(16).slice(1)
-        : color
-
-      if (alpha !== '') {
-        a = alpha
-      } else {
-        a = 1
-      }
-      // multiply before convert to HEX
-      a = (((a as number) * 255) | (1 << 8)).toString(16).slice(1)
-      hex = hex + a
-
-      return '#' + hex
-    },
-
-    /**
-     * Opens the browser file selection tool.
-     */
-    uploadFile(): void {
-      ;(this.$refs?.uploader as HTMLInputElement)?.click()
+    _rgba2hex(color: string): string {
+      return rgba2hex(color)
     },
 
     /**
@@ -1126,8 +612,10 @@ export default Vue.extend({
       this.$emit('filesUpload', files)
 
       for (let i = 0; i < files.length; i++) {
-        if (files.item(i)) {
-          this.files.push(files.item(i) as File)
+        const file = files.item(i) as File
+
+        if (file && !this.files.map((f) => f.name).includes(file.name)) {
+          this.files.push(file)
         }
       }
     },
@@ -1139,6 +627,7 @@ export default Vue.extend({
      */
     onInput(event: InputEvent): void {
       const target = event.target as HTMLDivElement
+
       if (
         this.maxLength &&
         +this.maxLength < target.innerText.replace(/\r?\n|\r/g, '').length
@@ -1158,12 +647,6 @@ export default Vue.extend({
      */
     onOptionClick(value: string): void {
       document.execCommand(value)
-
-      if (this.formatOptions.includes(value)) {
-        this.formatOptions = this.formatOptions.filter(
-          (option) => option !== value,
-        )
-      }
     },
 
     /**
@@ -1209,8 +692,6 @@ export default Vue.extend({
      * @param link The link to be inserted.
      */
     insertLink(link: string): void {
-      this.linkMenu = false
-
       const selection = this.addSelection()
 
       document.execCommand('createLink', false, link)
@@ -1222,7 +703,6 @@ export default Vue.extend({
       }
 
       this.currentSelection = [0, 0, null]
-      this.url = ''
     },
 
     /**
@@ -1240,48 +720,16 @@ export default Vue.extend({
     setColor(color: string): void {
       this.addSelection()
 
-      this.textColor = color.substr(0, 7)
       document.execCommand('foreColor', false, color.substr(0, 7))
 
       this.currentSelection = [0, 0, null]
     },
-
-    /**
-     * Updates the header buttons status according to the text
-     * state in some specific position.
-     */
-    updateOptions(): void {
-      const foreColor = document.queryCommandValue('foreColor')
-      this.color = this.rgba2hex(foreColor).substr(0, 7)
-
-      this.possibleFormats.forEach((option) => {
-        if (
-          document.queryCommandState(option) &&
-          !this.formatOptions.includes(option)
-        ) {
-          this.formatOptions.push(option)
-        } else if (!document.queryCommandState(option)) {
-          this.formatOptions = this.formatOptions.filter(
-            (format) => format !== option,
-          )
-        }
-      })
-
-      this.possibleAligns.forEach((align) => {
-        if (document.queryCommandState(align)) {
-          this.alignOption = align
-        }
-      })
-    },
   },
   mounted() {
-    this.color =
-      this.calculateColorBrightness(this.bgColor) <= 170 ? '#ffffff' : '#0d0d0d'
-
-    this.textColor =
-      this.calculateColorBrightness(this.bgColor) <= 170 ? '#ffffff' : '#0d0d0d'
-
-    this.baseTextColor = this.color
+    this.baseTextColor =
+      this._calculateColorBrightness(this.bgColor) <= 170
+        ? '#ffffff'
+        : '#0d0d0d'
 
     const textarea = document.querySelector<HTMLDivElement>(
       '.v-text-editor__textarea',
@@ -1293,18 +741,32 @@ export default Vue.extend({
       this.text = this.value
       this.rawText = textarea.innerText
 
-      textarea.addEventListener('mouseup', () => {
-        this.updateOptions()
-      })
-
-      textarea.addEventListener('keyup', () => {
-        this.updateOptions()
+      textarea.addEventListener('keyup', (e) => {
+        if (e.code === 'ControlLeft' || e.code === 'ControlRight') {
+          this.isControlPressed = false
+        }
       })
 
       textarea.addEventListener('keydown', (e) => {
+        if (e.code === 'ControlLeft' || e.code === 'ControlRight') {
+          this.isControlPressed = true
+        }
+
         if (e.code === 'Tab') {
           e.preventDefault()
-          document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;')
+          if (this.maxLength && +this.maxLength - this.textLength > 0) {
+            let spaces = ''
+            const amount =
+              +this.maxLength - this.textLength > 4
+                ? 4
+                : +this.maxLength - this.textLength
+
+            for (let i = 0; i < amount; i++) {
+              spaces += '&nbsp;'
+            }
+
+            document.execCommand('insertHTML', false, spaces)
+          }
         }
       })
     }
@@ -1322,8 +784,6 @@ export default Vue.extend({
     linkMenu(value: boolean) {
       if (!value) {
         this.currentSelection = [0, 0]
-      } else {
-        this.color = this.textColor
       }
     },
   },
@@ -1343,20 +803,8 @@ export default Vue.extend({
 .v-text-editor__container {
   display: flex;
   flex-direction: column;
-}
 
-.v-text-editor__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-
-  width: 100%;
-
-  padding: 0.6rem;
-
-  overflow: visible !important;
-  border-radius: 5px;
+  min-width: 260px;
 }
 
 .v-text-editor__textarea {
@@ -1370,6 +818,11 @@ export default Vue.extend({
 
 .v-text-editor__textarea li {
   overflow: visible !important;
+}
+
+.v-text-editor__textarea * {
+  font-family: 'Roboto', sans-serif !important;
+  background: transparent !important;
 }
 
 .v-text-editor__textarea[placeholder]:empty:before {
