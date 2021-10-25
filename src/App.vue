@@ -1,20 +1,20 @@
 <template>
   <v-app>
     <v-main>
-      <HelloWorld />
+      <VueTextEditor />
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import HelloWorld from './components/HelloWorld.vue'
+import VueTextEditor from './components/VueTextEditor.vue'
 
 export default Vue.extend({
   name: 'App',
 
   components: {
-    HelloWorld,
+    VueTextEditor,
   },
 
   data: () => ({
