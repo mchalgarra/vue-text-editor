@@ -338,6 +338,7 @@
             v-model="url"
             class="v-text-editor__link ma-0 pa-0"
             clearable
+            autofocus
             solo
             :color="accentColor"
             @keydown="
@@ -437,8 +438,16 @@
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import Vue from 'vue'
+
+type JustifyType =
+  | 'justifyLeft'
+  | 'justifyRight'
+  | 'justifyCenter'
+  | 'justifyFull'
+
+export default Vue.extend({
   name: 'VueTextEditor',
   props: {
     /**
@@ -474,7 +483,7 @@ export default {
       type: [Number, String],
       required: false,
       default: '100%',
-      validator: (v) => typeof v !== 'number' || v >= 0,
+      validator: (v): boolean => typeof v !== 'number' || v >= 0,
     },
 
     /**
@@ -486,7 +495,7 @@ export default {
       type: [Number, String],
       required: false,
       default: 'auto',
-      validator: (v) => typeof v !== 'number' || v >= 0,
+      validator: (v): boolean => typeof v !== 'number' || v >= 0,
     },
 
     /**
@@ -521,7 +530,7 @@ export default {
       type: [Number, String],
       required: false,
       default: 50,
-      validator: (v) => typeof v !== 'number' || v >= 0,
+      validator: (v): boolean => typeof v !== 'number' || v >= 0,
     },
 
     /**
@@ -573,7 +582,7 @@ export default {
       type: [Number, String],
       required: false,
       default: null,
-      validator: (v) =>
+      validator: (v): boolean =>
         !v ||
         ((typeof v === 'number' ||
           (typeof v === 'string' && !isNaN(parseInt(v)))) &&
@@ -656,10 +665,10 @@ export default {
       type: Array,
       required: false,
       default: null,
-      validator: (v) =>
+      validator: (v: string[]): boolean =>
         typeof v === 'object' &&
         (v.length === 0 ||
-          (v.length &&
+          (!!v.length &&
             v.some((group) =>
               ['format', 'align', 'list', 'embed'].includes(group),
             ))),
@@ -708,7 +717,7 @@ export default {
       type: Object,
       required: false,
       default: null,
-      validator: (v) =>
+      validator: (v: { [key: string]: string[] }): boolean =>
         Object.keys(v).some((optionKey) =>
           ['format', 'align', 'list', 'embed'].includes(optionKey),
         ),
@@ -718,41 +727,33 @@ export default {
     return {
       /**
        * Property that defines the main container style.
-       *
-       * @type {CSSStyleDeclaration}
        */
       style: {
         width: typeof this.width === 'string' ? this.width : this.width + 'px',
         height:
           typeof this.height === 'string' ? this.height : this.height + 'px',
         backgroundColor: this.bgColor,
-      },
+      } as CSSStyleDeclaration,
 
       /**
        * Property that defines the header style.
-       *
-       * @type {CSSStyleDeclaration}
        */
       headerStyle: {
         minHeight:
           typeof this.headerMinHeight === 'string'
-            ? this.heightMinHeight
+            ? this.headerMinHeight
             : this.headerMinHeight + 'px',
-      },
+      } as CSSStyleDeclaration,
 
       /**
        * Property that represents the selected formatting options.
-       *
-       * @type {string[]}
        */
-      formatOptions: [],
+      formatOptions: [] as string[],
 
       /**
        * Property that represents the selected align option.
-       *
-       * @type {'justifyLeft' | 'justifyRight' | 'justifyCenter' | 'justifyFull'}
        */
-      alignOption: 'justifyLeft',
+      alignOption: 'justifyLeft' as JustifyType,
 
       /**
        * Property that defines all possible formatting options.
@@ -767,7 +768,7 @@ export default {
         'justifyCenter',
         'justifyRight',
         'justifyFull',
-      ],
+      ] as JustifyType[],
 
       /**
        * Property that defines all the editor available groups.
@@ -795,10 +796,7 @@ export default {
        * Its default value is calculated based on the brightness
        * level of the editor background color.
        */
-      color:
-        this.calculateColorBrightness(this.bgColor) <= 170
-          ? '#ffffff'
-          : '#0d0d0d',
+      color: '',
 
       /**
        * Property that defines the text current color (HEX).
@@ -806,10 +804,7 @@ export default {
        * Its default value is calculated based on the brightness
        * level of the editor background color.
        */
-      textColor:
-        this.calculateColorBrightness(this.bgColor) <= 170
-          ? '#ffffff'
-          : '#0d0d0d',
+      textColor: '',
 
       /**
        * Property that defines the text editor base color.
@@ -870,10 +865,8 @@ export default {
        *   v-on:fileRemove="removeFile($event)"
        * />
        * ```
-       *
-       * @type {File[]}
        */
-      files: [],
+      files: [] as File[],
 
       /**
        * Property that defines all keyboard safe keys when input
@@ -903,7 +896,7 @@ export default {
        *
        * It may be changed using the 'saveSelection' method.
        */
-      currentSelection: [0, 0, null],
+      currentSelection: [0, 0, null] as (Node | number | null | undefined)[],
     }
   },
   computed: {
@@ -911,7 +904,7 @@ export default {
      * Property that represents the length of the current text,
      * ignoring any line breaks.
      */
-    textLength() {
+    textLength(): number {
       return this.rawText.replace(/\r?\n|\r/g, '').length
     },
 
@@ -919,18 +912,18 @@ export default {
      * Property that represents the filled percentage relative
      * to the current text and the max length.
      */
-    filledPercentage() {
-      return !this.maxLength ? 0 : (this.textLength / this.maxLength) * 100
+    filledPercentage(): number {
+      return !this.maxLength ? 0 : (this.textLength / +this.maxLength) * 100
     },
   },
   methods: {
     /**
      * Returns whether the given property is selected.
      *
-     * @param {string} value The option value.
+     * @param value The option value.
      * @returns Whether the option is selected.
      */
-    isOptionSelected(value) {
+    isOptionSelected(value: string): boolean {
       return (
         (this.formatOptions && this.formatOptions.includes(value)) ||
         this.alignOption === value
@@ -940,16 +933,16 @@ export default {
     /**
      * Returns whether the given group is active.
      *
-     * @param {string} group The group to be checked.
-     * @returns {boolean} Whether the group is active.
+     * @param group The group to be checked.
+     * @returns Whether the group is active.
      */
-    isGroupActive(group) {
+    isGroupActive(group: string): boolean {
       return (
         (!this.groups && !this.options) ||
         (this.groups && this.groups.includes(group)) ||
         (this.options &&
           this.options[group] &&
-          this.options[group].some((o) =>
+          this.options[group].some((o: string) =>
             Object.values(this.availableOptions).join().split(',').includes(o),
           ))
       )
@@ -958,29 +951,28 @@ export default {
     /**
      * Returns whether the given option is active.
      *
-     * @param {string} option The option to be checked.
-     * @returns {boolean} Whether the option is active.
+     * @param option The option to be checked.
+     * @returns Whether the option is active.
      */
-    isOptionActive(option) {
+    isOptionActive(option: string): boolean {
+      const entry: [string, string[]] | undefined = Object.entries(
+        this.availableOptions,
+      ).find((avOp) => avOp[1].includes(option))
+
       return (
         !this.options ||
         Object.values(this.options).join().split(',').includes(option) ||
-        (this.groups &&
-          this.groups.includes(
-            Object.entries(this.availableOptions).find((avOp) =>
-              avOp[1].includes(option),
-            )[0],
-          ))
+        (!!entry && this.groups && this.groups.includes(entry[0]))
       )
     },
 
     /**
      * Returns whether the divider from some group is active.
      *
-     * @param {string} group The group to be checked.
-     * @returns {boolean} Whether the divider is active.
+     * @param group The group to be checked.
+     * @returns Whether the divider is active.
      */
-    isDividerActive(group) {
+    isDividerActive(group: string): boolean {
       const index = this.availableGroups.indexOf(group)
 
       if (index === -1) {
@@ -999,10 +991,10 @@ export default {
     /**
      * Calculates the file size and adds its unit (B, KB, MB, GB).
      *
-     * @param {number} size The file size.
-     * @returns {string} A string containing the rounded size with its unit (B, KB, MB, GB).
+     * @param size The file size.
+     * @returns A string containing the rounded size with its unit (B, KB, MB, GB).
      */
-    calculateFileSize(size) {
+    calculateFileSize(size: number): string {
       if (size < 1024) {
         return size + ' B'
       } else if (size < 1048576) {
@@ -1017,14 +1009,18 @@ export default {
     /**
      * Calculates the brightness of the given color (dark or bright).
      *
-     * @param {string} color The color in RGB or HEX format.
-     * @returns {number} A number that represents the color brightness (dark is <= 170 approximately)
+     * @param color The color in RGB or HEX format.
+     * @returns A number that represents the color brightness (dark is <= 170 approximately)
      */
-    calculateColorBrightness(color) {
-      let r, g, b
+    calculateColorBrightness(color: string): number {
+      let r: number | string
+      let g: number | string
+      let b: number | string
+
+      let colorAux: RegExpMatchArray | number | boolean | null = null
 
       if (color.match(/^rgb/)) {
-        color = color.match(
+        colorAux = color.match(
           /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/,
         )
 
@@ -1032,16 +1028,21 @@ export default {
         g = color[2]
         b = color[3]
       } else {
-        color = +(
-          '0x' + color.slice(1).replace(color.length < 5 && /./g, '$&$&')
+        colorAux = +(
+          '0x' +
+          color.slice(1).replace((color.length < 5 && /./g) as RegExp, '$&$&')
         )
 
-        r = color >> 16
-        g = (color >> 8) & 255
-        b = color & 255
+        r = colorAux >> 16
+        g = (colorAux >> 8) & 255
+        b = colorAux & 255
       }
 
-      const hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
+      const hsp = Math.sqrt(
+        0.299 * ((r as number) * (r as number)) +
+          0.587 * ((g as number) * (g as number)) +
+          0.114 * ((b as number) * (b as number)),
+      )
 
       return hsp
     },
@@ -1049,17 +1050,18 @@ export default {
     /**
      * Converts a RGBA color into the HEXA format.
      *
-     * @param {string} color The RGBA formatted color.
-     * @returns {string} An HEXA formatted color.
+     * @param color The RGBA formatted color.
+     * @returns An HEXA formatted color.
      *
      * @example
      * ```js
      * rgba2hex('rgba(255, 0, 0, 1)') => '#FF0000FF'
      * ```
      */
-    rgba2hex(color) {
-      let a
-      const rgb = color
+    rgba2hex(color: string): string {
+      let a: number | string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rgb: any = color
         .replace(/\s/g, '')
         .match(/^rgba?\((\d+),(\d+),(\d+),?([^,\s)]+)?/i)
       const alpha = ((rgb && rgb[4]) || '').trim()
@@ -1075,7 +1077,7 @@ export default {
         a = 1
       }
       // multiply before convert to HEX
-      a = ((a * 255) | (1 << 8)).toString(16).slice(1)
+      a = (((a as number) * 255) | (1 << 8)).toString(16).slice(1)
       hex = hex + a
 
       return '#' + hex
@@ -1084,21 +1086,23 @@ export default {
     /**
      * Opens the browser file selection tool.
      */
-    uploadFile() {
-      this.$refs.uploader.click()
+    uploadFile(): void {
+      ;(this.$refs?.uploader as HTMLInputElement)?.click()
     },
 
     /**
      * Removes a file from the files array.
      *
-     * @param {File} file The file to be removed.
+     * @param file The file to be removed.
      */
-    removeFile(file) {
+    removeFile(file: File): void {
       this.$emit('fileRemove', file)
 
       this.files = this.files.filter((f) => f.name !== file.name)
 
-      const input = document.querySelector('.v-text-editor__input')
+      const input = document.querySelector<HTMLInputElement>(
+        '.v-text-editor__input',
+      )
 
       if (input && input.files) {
         const dt = new DataTransfer()
@@ -1116,40 +1120,43 @@ export default {
     /**
      * Sets and emits the embeded files.
      *
-     * @param {FileList} files An array of files to be attached.
+     * @param files An array of files to be attached.
      */
-    onFileUpload(files) {
+    onFileUpload(files: FileList): void {
       this.$emit('filesUpload', files)
 
       for (let i = 0; i < files.length; i++) {
-        this.files.push(files.item(i))
+        if (files.item(i)) {
+          this.files.push(files.item(i) as File)
+        }
       }
     },
 
     /**
      * Triggers when the text is modified by the user's keyboard.
      *
-     * @param {InputEvent} event The event triggered by the user.
+     * @param event The event triggered by the user.
      */
-    onInput(event) {
+    onInput(event: InputEvent): void {
+      const target = event.target as HTMLDivElement
       if (
         this.maxLength &&
-        this.maxLength < event.target.innerText.replace(/\r?\n|\r/g, '').length
+        +this.maxLength < target.innerText.replace(/\r?\n|\r/g, '').length
       ) {
         return
       }
 
-      this.text = event.target.innerHTML
-      this.rawText = event.target.innerText
+      this.text = target.innerHTML
+      this.rawText = target.innerText
     },
 
     /**
      * Executes a command to format the text according to
      * the clicked button.
      *
-     * @param {string} value The command/option to be executed.
+     * @param value The command/option to be executed.
      */
-    onOptionClick(value) {
+    onOptionClick(value: string): void {
       document.execCommand(value)
 
       if (this.formatOptions.includes(value)) {
@@ -1162,12 +1169,12 @@ export default {
     /**
      * Saves the current selection to apply the link.
      */
-    saveSelection() {
+    saveSelection(): void {
       const selection = document.getSelection()
       this.currentSelection = [
-        selection.baseOffset,
-        selection.focusOffset,
-        selection.anchorNode,
+        selection?.anchorOffset,
+        selection?.focusOffset,
+        selection?.anchorNode,
       ]
     },
 
@@ -1175,17 +1182,23 @@ export default {
      * Adds a selection to the document based on the 'currentSelection'
      * property. Make sure to use the 'saveSelection' method before.
      *
-     * @returns {Selection} The created selection.
+     * @returns The created selection.
      */
-    addSelection() {
+    addSelection(): Selection | null {
       const selection = document.getSelection()
-      selection.removeAllRanges()
+      selection?.removeAllRanges()
 
       const range = document.createRange()
-      range.setStart(this.currentSelection[2], this.currentSelection[0])
-      range.setEnd(this.currentSelection[2], this.currentSelection[1])
+      range.setStart(
+        this.currentSelection[2] as Node,
+        this.currentSelection[0] as number,
+      )
+      range.setEnd(
+        this.currentSelection[2] as Node,
+        this.currentSelection[1] as number,
+      )
 
-      selection.addRange(range)
+      selection?.addRange(range)
 
       return selection
     },
@@ -1193,15 +1206,20 @@ export default {
     /**
      * Inserts a link to the selected text.
      *
-     * @param {string} link The link to be inserted.
+     * @param link The link to be inserted.
      */
-    insertLink(link) {
+    insertLink(link: string): void {
       this.linkMenu = false
 
       const selection = this.addSelection()
 
       document.execCommand('createLink', false, link)
-      selection.anchorNode.parentElement.target = '_blank'
+
+      if (selection && selection.anchorNode) {
+        ;(
+          (selection.anchorNode as Node).parentElement as HTMLAnchorElement
+        ).target = '_blank'
+      }
 
       this.currentSelection = [0, 0, null]
       this.url = ''
@@ -1210,16 +1228,16 @@ export default {
     /**
      * Removes the hyperlink from the selected text.
      */
-    removeLink() {
+    removeLink(): void {
       document.execCommand('unlink')
     },
 
     /**
      * Sets the color of the selected text.
      *
-     * @param {string} color The color to be set.
+     * @param color The color to be set.
      */
-    setColor(color) {
+    setColor(color: string): void {
       this.addSelection()
 
       this.textColor = color.substr(0, 7)
@@ -1232,7 +1250,7 @@ export default {
      * Updates the header buttons status according to the text
      * state in some specific position.
      */
-    updateOptions() {
+    updateOptions(): void {
       const foreColor = document.queryCommandValue('foreColor')
       this.color = this.rgba2hex(foreColor).substr(0, 7)
 
@@ -1257,9 +1275,17 @@ export default {
     },
   },
   mounted() {
+    this.color =
+      this.calculateColorBrightness(this.bgColor) <= 170 ? '#ffffff' : '#0d0d0d'
+
+    this.textColor =
+      this.calculateColorBrightness(this.bgColor) <= 170 ? '#ffffff' : '#0d0d0d'
+
     this.baseTextColor = this.color
 
-    const textarea = document.querySelector('.v-text-editor__textarea')
+    const textarea = document.querySelector<HTMLDivElement>(
+      '.v-text-editor__textarea',
+    )
 
     if (textarea) {
       textarea.style.caretColor = this.accentColor
@@ -1284,16 +1310,16 @@ export default {
     }
   },
   watch: {
-    text(value) {
+    text(value: string) {
       this.$emit('textChange', value)
     },
-    rawText(value) {
+    rawText(value: string) {
       this.$emit('rawTextChange', value)
     },
-    files(value) {
+    files(value: File[]) {
       this.$emit('filesChange', value)
     },
-    linkMenu(value) {
+    linkMenu(value: boolean) {
       if (!value) {
         this.currentSelection = [0, 0]
       } else {
@@ -1301,7 +1327,7 @@ export default {
       }
     },
   },
-}
+})
 </script>
 
 <style scope>
@@ -1349,6 +1375,8 @@ export default {
 .v-text-editor__textarea[placeholder]:empty:before {
   content: attr(placeholder);
   color: #555;
+
+  pointer-events: none;
 
   transition: opacity 0.1s;
 }
